@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 
 export default defineHandler(async (event) => {
   const prisma = event.context.prisma;
-  const tableName = event.context.params.table;
+  const tableName = event.context.params?.table;
 
   if (!tableName) {
     return {
