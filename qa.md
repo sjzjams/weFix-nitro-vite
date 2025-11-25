@@ -52,3 +52,50 @@
 1.  修改 `setupApp` 的参数类型，使其接受一个通用的 `HTMLElement` 作为容器。
 2.  在函数内部创建它自己需要的 `button` 元素，并将所有事件监听和逻辑都应用在这个内部创建的按钮上。
 3.  最后将创建好的按钮 append 到传入的容器中。这样，`setupApp` 就不再依赖于外部传入特定类型的元素，解决了类型错误，也提升了代码的健壮性。
+
+---
+
+## Q4: Error: Cannot find module '.prisma/client/default' 解决问题
+
+**问题描述:**
+在使用 Prisma ORM 时出现模块找不到错误，提示无法找到 `.prisma/client/default` 模块。
+
+**原因分析:**
+此错误通常是由于 Prisma Client 未正确生成或编译导致的，常见于项目构建或开发环境配置不当的情况。
+
+**解决方案:**
+
+1.  **重新生成 Prisma Client**
+    ```bash
+    npx prisma generate
+    ```
+
+2.  **检查并安装必要依赖**
+    ```bash
+    npm install @prisma/client
+    # 或
+    yarn add @prisma/client
+    ```
+
+3.  **清理并重新构建项目**
+    ```bash
+    rm -rf node_modules .prisma
+    npm install
+    npx prisma generate
+    npm run build
+    ```
+
+4.  **检查 [schema.prisma](file://d:/weappgroup/huasanJD/api/prisma/schema.prisma) 配置**
+    确保 `prisma/schema.prisma` 文件中的 `generator` 配置正确：
+    ```prisma
+    generator client {
+      provider = "prisma-client-js"
+    }
+    ```
+
+5.  **验证导入路径**
+    在代码中正确导入 `PrismaClient`：
+    ```typescript
+    import { PrismaClient } from '@prisma/client'
+    const prisma = new PrismaClient()
+    ```
