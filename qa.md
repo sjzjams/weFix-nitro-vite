@@ -99,3 +99,27 @@
     import { PrismaClient } from '@prisma/client'
     const prisma = new PrismaClient()
     ```
+
+---
+
+## Q5: 如何将手动实现的 hash 路由重构为 React Router 的 `<Routes>` 方式？
+
+**问题描述:**
+在 `app/main.tsx` 中，路由是通过监听 `hashchange` 事件和 `switch` 语句手动实现的。如何将其重构为使用 `react-router-dom` 的声明式 `<Routes>` 写法？
+
+**原因分析:**
+手动路由实现存在以下问题：
+- **命令式 DOM 操作:** 直接使用 `innerHTML` 和 `createElement`，这在 React 中是不推荐的。
+- **可维护性差:** 随着路由增多，`switch` 语句会变得非常复杂。
+- **功能受限:** 难以实现嵌套路由、路由参数等高级功能。
+
+**解决方案:**
+采用 `react-router-dom` 进行全面的声明式路由重构：
+1.  **移除旧逻辑:** 删除手动的 `router()` 函数和 `hashchange` 事件监听器。
+2.  **创建主应用组件 `App`:** 该组件将包含 `<Router>`、`<nav>` 导航链接和 `<Routes>` 路由配置。
+3.  **使用 `<Link>` 组件:** 将原有的 `<a>` 标签替换为 React Router 的 `<Link>` 组件，以实现无页面刷新的客户端路由。
+4.  **定义路由规则:** 使用 `<Routes>` 和 `<Route>` 组件来清晰地定义路径和对应组件的映射关系。
+5.  **创建 `LegacyWrapper` 组件:** 为了兼容现有的、直接操作 DOM 的 `setupApp` 和 `setupDatabaseExplorer` 函数，创建了一个名为 `LegacyWrapper` 的包装器组件。该组件利用 `useRef` 和 `useEffect` Hooks，在 React 的生命周期内安全地调用这些非 React 函数，并将它们渲染到指定的 DOM 节点上。
+6.  **渲染应用:** 在 `router-outlet` 元素上，使用 `ReactDOM.createRoot().render()` 来渲染根组件 `<App />`。
+
+通过这次重构，路由逻辑变得更加清晰、可维护，并且完全融入了 React 的组件化和声明式生态。
