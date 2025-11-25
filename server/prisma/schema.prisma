@@ -1,0 +1,367 @@
+// Prisma数据库模型定义
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id          String   @id @default(uuid())
+  openid      String   @unique @db.VarChar(100)
+  nickname    String?  @db.VarChar(100)
+  avatar      String?  @db.Text
+  phone       String?  @db.VarChar(20)
+  email       String?  @db.VarChar(100)
+  gender      Int?     @db.TinyInt
+  city        String?  @db.VarChar(50)
+  province    String?  @db.VarChar(50)
+  country     String?  @db.VarChar(50)
+  language    String?  @db.VarChar(20)
+  userType    String   @default("customer") @db.VarChar(20) // customer, technician, admin
+  status      String   @default("active") @db.VarChar(20) // active, inactive, banned
+  balance     Decimal  @default(0) @db.Decimal(10, 2)
+  totalOrders Int      @default(0)
+  rating      Float    @default(0) @db.Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  orders                 RepairOrder[]
+  technician             Technician?
+  addresses              UserAddress[]
+  ratings                Rating[]
+  sentMessages           Message[]               @relation("SentMessages")
+  receivedMessages       Message[]               @relation("ReceivedMessages")
+  notifications          Notification[]
+  payments               Payment[]
+  customerServiceTickets CustomerServiceTicket[]
+
+  @@map("users")
+}
+
+// 维修师傅表
+model Technician {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  name            String   @db.VarChar(100)
+  phone           String   @db.VarChar(20)
+  avatar          String?  @db.Text
+  idCard          String   @db.VarChar(18)
+  idCardFront     String?  @db.Text
+  idCardBack      String?  @db.Text
+  skills          String   @db.Text // JSON数组，存储技能标签
+  experience      Int      @default(0) // 从业年限
+  rating          Float    @default(0) @db.Float
+  totalOrders     Int      @default(0)
+  completedOrders Int      @default(0)
+  latitude        Float?   @db.Float
+  longitude       Float?   @db.Float
+  location        String?  @db.VarChar(200)
+  isOnline        Boolean  @default(false)
+  isVerified      Boolean  @default(false)
+  status          String   @default("pending") @db.VarChar(20) // pending, approved, rejected
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // 关联关系
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    RepairOrder[]
+  schedules TechnicianSchedule[]
+  messages  Message[]            @relation("TechnicianMessages")
+  ratings   Rating[]
+
+  @@map("technicians")
+}
+
+// 维修师傅排班表
+model TechnicianSchedule {
+  id           String   @id @default(uuid())
+  technicianId String
+  dayOfWeek    Int      @db.TinyInt // 0-6，周日到周六
+  startTime    String   @db.VarChar(5) // HH:mm
+  endTime      String   @db.VarChar(5) // HH:mm
+  isAvailable  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  technician Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@unique([technicianId, dayOfWeek, startTime])
+  @@map("technician_schedules")
+}
+
+// 服务分类表
+model ServiceCategory {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  icon        String?  @db.Text
+  color       String?  @db.VarChar(20)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  orders RepairOrder[]
+  prices ServicePrice[]
+
+  @@map("service_categories")
+}
+
+// 服务价格表
+model ServicePrice {
+  id          String   @id @default(uuid())
+  categoryId  String
+  serviceName String   @db.VarChar(200)
+  price       Decimal  @db.Decimal(10, 2)
+  minPrice    Decimal  @db.Decimal(10, 2)
+  maxPrice    Decimal  @db.Decimal(10, 2)
+  unit        String?  @db.VarChar(20)
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("service_prices")
+}
+
+// 维修订单表
+model RepairOrder {
+  id                   String    @id @default(uuid())
+  orderNo              String    @unique @db.VarChar(50)
+  userId               String
+  technicianId         String?
+  categoryId           String
+  categoryName         String    @db.VarChar(100)
+  problemDescription   String    @db.Text
+  images               String    @db.Text // JSON数组，存储图片URL
+  appointmentTime      DateTime
+  serviceAddress       String    @db.VarChar(500)
+  contactName          String    @db.VarChar(100)
+  contactPhone         String    @db.VarChar(20)
+  latitude             Float?    @db.Float
+  longitude            Float?    @db.Float
+  status               String    @default("pending") @db.VarChar(20) // pending, processing, completed, cancelled
+  price                Decimal?  @db.Decimal(10, 2)
+  finalPrice           Decimal?  @db.Decimal(10, 2)
+  paidAmount           Decimal   @default(0) @db.Decimal(10, 2)
+  paymentStatus        String    @default("unpaid") @db.VarChar(20) // unpaid, paid, refunded
+  paymentMethod        String?   @db.VarChar(20)
+  paymentTransactionId String?   @db.VarChar(100)
+  technicianNote       String?   @db.Text
+  userNote             String?   @db.Text
+  completedAt          DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // 关联关系
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  technician             Technician?             @relation(fields: [technicianId], references: [id])
+  category               ServiceCategory         @relation(fields: [categoryId], references: [id])
+  rating                 Rating?
+  messages               Message[]               @relation("OrderMessages")
+  payments               Payment[]
+  statusLogs             OrderStatusLog[]
+  customerServiceTickets CustomerServiceTicket[]
+
+  @@map("repair_orders")
+}
+
+// 订单状态变更日志表
+model OrderStatusLog {
+  id           String   @id @default(uuid())
+  orderId      String
+  oldStatus    String   @db.VarChar(20)
+  newStatus    String   @db.VarChar(20)
+  note         String?  @db.Text
+  operatorId   String?  @db.VarChar(100)
+  operatorType String?  @db.VarChar(20)
+  createdAt    DateTime @default(now())
+
+  order RepairOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_logs")
+}
+
+// 评价表
+model Rating {
+  id           String   @id @default(uuid())
+  orderId      String   @unique
+  userId       String
+  technicianId String
+  rating       Int      @db.TinyInt // 1-5星
+  content      String?  @db.Text
+  images       String?  @db.Text // JSON数组，存储评价图片
+  tags         String?  @db.Text // JSON数组，存储评价标签
+  isAnonymous  Boolean  @default(false)
+  status       String   @default("active") @db.VarChar(20) // active, hidden
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联关系
+  order      RepairOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  technician Technician  @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@map("ratings")
+}
+
+// 支付记录表
+model Payment {
+  id            String    @id @default(uuid())
+  orderId       String
+  userId        String
+  amount        Decimal   @db.Decimal(10, 2)
+  paymentMethod String    @db.VarChar(20)
+  transactionId String    @unique @db.VarChar(100)
+  status        String    @default("pending") @db.VarChar(20) // pending, success, failed, refunded
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  refundReason  String?   @db.Text
+  refundAmount  Decimal?  @db.Decimal(10, 2)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 关联关系
+  order RepairOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// 消息表
+model Message {
+  id             String    @id @default(uuid())
+  conversationId String    @db.VarChar(100)
+  senderId       String
+  senderType     String    @db.VarChar(20) // user, technician, system
+  receiverId     String?
+  receiverType   String?   @db.VarChar(20)
+  content        String    @db.Text
+  messageType    String    @default("text") @db.VarChar(20) // text, image, voice, video, location, order
+  mediaUrl       String?   @db.Text
+  duration       Int? // 语音/视频时长（秒）
+  isRead         Boolean   @default(false)
+  readAt         DateTime?
+  orderId        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // 关联关系
+  sender     User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade, map: "message_sender_fk")
+  receiver   User?        @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade, map: "message_receiver_fk")
+  order      RepairOrder? @relation("OrderMessages", fields: [orderId], references: [id], map: "message_order_fk")
+  technician Technician?  @relation("TechnicianMessages", fields: [senderId], references: [userId])
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([orderId])
+  @@map("messages")
+}
+
+// 用户地址表
+model UserAddress {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String   @db.VarChar(100) // 地址名称，如"家"、"公司"
+  contactName  String   @db.VarChar(100)
+  contactPhone String   @db.VarChar(20)
+  province     String   @db.VarChar(50)
+  city         String   @db.VarChar(50)
+  district     String   @db.VarChar(50)
+  address      String   @db.VarChar(500)
+  latitude     Float?   @db.Float
+  longitude    Float?   @db.Float
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_addresses")
+}
+
+// 系统通知表
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  title     String    @db.VarChar(200)
+  content   String    @db.Text
+  type      String    @db.VarChar(50) // order, system, promotion
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  relatedId String?   @db.VarChar(100)
+  extraData String?   @db.Text // JSON字符串，存储额外数据
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// 系统配置表
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.Text
+  description String?  @db.Text
+  isEditable  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+// 客服工单表
+model CustomerServiceTicket {
+  id          String    @id @default(uuid())
+  ticketNo    String    @unique @db.VarChar(50)
+  userId      String
+  orderId     String?
+  type        String    @db.VarChar(50) // complaint, inquiry, suggestion, other
+  title       String    @db.VarChar(200)
+  content     String    @db.Text
+  contactInfo String    @db.VarChar(100)
+  images      String?   @db.Text // JSON数组，存储图片URL
+  priority    String    @default("medium") @db.VarChar(20) // low, medium, high, urgent
+  status      String    @default("pending") @db.VarChar(20) // pending, processing, resolved, closed
+  assigneeId  String?   @db.VarChar(100) // 分配给的处理人
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关联关系
+  user  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order RepairOrder?         @relation(fields: [orderId], references: [id])
+  logs  CustomerServiceLog[]
+
+  @@map("customer_service_tickets")
+}
+
+// 客服工单处理日志表
+model CustomerServiceLog {
+  id           String   @id @default(uuid())
+  ticketId     String
+  type         String   @db.VarChar(50) // create, reply, transfer, resolve, close
+  content      String   @db.Text
+  operatorType String   @db.VarChar(20) // user, admin, system
+  operatorId   String?  @db.VarChar(100)
+  attachments  String?  @db.Text // JSON数组，存储附件URL
+  createdAt    DateTime @default(now())
+
+  ticket CustomerServiceTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("customer_service_logs")
+}

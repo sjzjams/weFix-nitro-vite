@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Database Explorer</h1>
+        <div id="explorer">
+            <div id="sidebar">
+                <h2>Tables</h2>
+                <ul id="table-list"></ul>
+            </div>
+            <div id="main-content">
+                <div id="search-bar">
+                    <input type="text" id="search-input" placeholder="Search for tables or columns...">
+                    <button id="search-button">Search</button>
+                </div>
+                <div id="table-details">
+                    <h3 id="table-name"></h3>
+                    <h4>Structure</h4>
+                    <table id="table-structure">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Type</th>
+                                <th>Null</th>
+                                <th>Key</th>
+                                <th>Default</th>
+                                <th>Extra</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <h4>Sample Data</h4>
+                    <table id="sample-data">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="pagination"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="database-explorer.js"></script>
+</body>
+</html>
