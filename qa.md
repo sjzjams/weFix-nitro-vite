@@ -178,3 +178,28 @@ jobs:
       run: pnpm run build
 ```
 
+---
+
+## Q7: 为什么 GitHub Actions 工作流没有被触发？
+
+**问题描述:**
+创建了 GitHub Actions 工作流后，向 `master` 分支推送代码或创建拉取请求时，工作流没有按预期运行。
+
+**原因分析:**
+工作流的配置文件 `.github/workflows/main.yml` 中，`on` 事件的触发分支被错误地设置为了 `main`，而实际的开发主分支是 `master`。GitHub Actions 只会监听在配置文件中明确指定的分支上的事件。
+
+**解决方案:**
+修改 `.github/workflows/main.yml` 文件，将 `push` 和 `pull_request` 事件下的 `branches` 从 `[ main ]` 更改为 `[ master ]`，以匹配仓库的实际主分支名称。
+
+**修正后的配置:**
+```yaml
+# .github/workflows/main.yml
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+```
+
+
