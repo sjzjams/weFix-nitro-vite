@@ -24,3 +24,22 @@ Refactor `app/main.tsx` to use the declarative, component-based routing provided
 6.  **Render the App:** The application will be rendered once by calling `ReactDOM.createRoot(outlet).render(<App />)`.
 
 This refactoring will make the routing logic more robust, maintainable, and aligned with modern React best practices.
+
+# Issue: Create GitHub Actions Workflow
+
+**User Query:** Create a GitHub Actions workflow for the project.
+
+**Analysis:**
+The user requested the creation of a CI/CD workflow using GitHub Actions. The project is a Node.js application using `pnpm` as the package manager. The `package.json` file contains a `build` script.
+
+**Proposed Solution:**
+Create a GitHub Actions workflow file at `.github/workflows/main.yml`.
+
+**Key Changes:**
+1.  **Workflow Trigger:** The workflow is configured to run on `push` and `pull_request` events to the `main` branch.
+2.  **Environment:** The job runs on an `ubuntu-latest` runner.
+3.  **Node.js Setup:** It sets up a Node.js 20 environment.
+4.  **pnpm Setup:** It installs `pnpm` globally.
+5.  **Dependency Installation:** It runs `pnpm install` to install project dependencies.
+6.  **Build Step:** It runs `pnpm run build` to build the project.
+

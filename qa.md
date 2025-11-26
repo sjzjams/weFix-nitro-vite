@@ -123,3 +123,58 @@
 6.  **渲染应用:** 在 `router-outlet` 元素上，使用 `ReactDOM.createRoot().render()` 来渲染根组件 `<App />`。
 
 通过这次重构，路由逻辑变得更加清晰、可维护，并且完全融入了 React 的组件化和声明式生态。
+
+---
+
+## Q6: 如何为项目创建 GitHub Actions 工作流？
+
+**问题描述:**
+需要为 `d:\weappgroup\huasanJD\weFix-nitro-vite` 项目创建一个 GitHub Actions 工作流，以实现 CI/CD 自动化。
+
+**解决方案:**
+1.  **创建目录:** 在项目根目录下创建 `.github/workflows` 文件夹。
+2.  **创建工作流文件:** 在该目录下创建一个名为 `main.yml` 的 YAML 文件。
+3.  **配置工作流:**
+    - **名称:** `CI`
+    - **触发条件:** 在 `main` 分支上发生 `push` 或 `pull_request` 事件时触发。
+    - **运行环境:** `ubuntu-latest`
+    - **步骤:**
+        1.  使用 `actions/checkout@v3` 检出代码。
+        2.  使用 `actions/setup-node@v3` 设置 Node.js 20 环境。
+        3.  运行 `npm install -g pnpm` 全局安装 pnpm。
+        4.  运行 `pnpm install` 安装项目依赖。
+        5.  运行 `pnpm run build` 构建项目。
+
+**工作流代码 (`.github/workflows/main.yml`):**
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+      
+    - name: 设置 Node.js 环境
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        
+    - name: 安装 pnpm
+      run: npm install -g pnpm
+      
+    - name: 安装依赖
+      run: pnpm install
+      
+    - name: 构建项目
+      run: pnpm run build
+```
+
