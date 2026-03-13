@@ -71,7 +71,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className="flex-1 overflow-y-auto scrollbar-hide">{children}</main>
 
       {/* Bottom Navigation */}
-      {!hideNav && (
+      {/* {!hideNav && (
         <nav className="bg-white border-t border-gray-200 fixed bottom-0 w-full max-w-md z-50 pb-safe">
           <div className={`flex justify-around items-center h-16 px-2`}>
             {navItems.map((item) => {
@@ -114,7 +114,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             })}
           </div>
         </nav>
-      )}
+      )} */}
     </div>
   );
 };

@@ -20,6 +20,7 @@ import ChatList from "./pages/ChatList";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import HamBurger from "./pages/HamBurger";
 
 /**
  * 一个React组件，用于包装并运行那些期望直接操作DOM元素的旧有setup函数。
@@ -129,6 +130,7 @@ const AppRoutes = () => {
               </div>
             }
           />
+        <Route path="/hamburger" element={<HamBurger />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
         <Route path="/repair" element={<RequestRepair />} />
